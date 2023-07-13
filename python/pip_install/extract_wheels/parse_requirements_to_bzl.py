@@ -100,7 +100,7 @@ def generate_parsed_requirements_contents(
     repo_prefix: str,
     whl_library_args: Dict[str, Any],
     annotations: Dict[str, str] = dict(),
-    patches: Dict[str, List[str]] = dict(),
+    patches: Dict[str, Any] = dict(),
     bzlmod: bool = False,
 ) -> str:
     """
