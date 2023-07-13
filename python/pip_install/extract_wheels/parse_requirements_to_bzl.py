@@ -86,6 +86,7 @@ def parse_whl_library_args(args: argparse.Namespace) -> Dict[str, Any]:
         "requirements_lock_label",
         "annotations",
         "bzlmod",
+        "patches",
     ):
         if arg in whl_library_args:
             whl_library_args.pop(arg)
@@ -99,6 +100,7 @@ def generate_parsed_requirements_contents(
     repo_prefix: str,
     whl_library_args: Dict[str, Any],
     annotations: Dict[str, str] = dict(),
+    patches: Dict[str, List[str]] = dict(),
     bzlmod: bool = False,
 ) -> str:
     """
@@ -133,11 +135,12 @@ def generate_parsed_requirements_contents(
             whl_config = dict(_config)
             whl_config.update(whl_library_kwargs)
             for name, requirement in _packages:
+                kwargs = dict(whl_config.items() + _get_patch_kwargs(requirement).items())
                 whl_library(
                     name = name,
                     requirement = requirement,
                     annotation = _get_annotation(requirement),
-                    **whl_config
+                    **kwargs,
                 )
 """
     return textwrap.dedent(
@@ -153,6 +156,7 @@ def generate_parsed_requirements_contents(
         _packages = {repo_names_and_reqs}
         _config = {args}
         _annotations = {annotations}
+        _patches = {patches}
         _bzlmod = {bzlmod}
 
         def _clean_name(name):
@@ -183,17 +187,25 @@ def generate_parsed_requirements_contents(
                 script = pkg
             return "@{repo_prefix}" + _clean_name(pkg) + "//:{entry_point_prefix}_" + script
 
-        def _get_annotation(requirement):
+        def _package_name_from_requirement(requirement):
             # This expects to parse `setuptools==58.2.0     --hash=sha256:2551203ae6955b9876741a26ab3e767bb3242dafe86a32a749ea0d78b6792f11`
             # down wo `setuptools`.
-            name = requirement.split(" ")[0].split("=")[0].split("[")[0]
+            return requirement.split(" ")[0].split("=")[0].split("[")[0]
+
+        def _get_annotation(requirement):
+            name = _package_name_from_requirement(requirement)
             return _annotations.get(name)
+
+        def _get_patch_kwargs(requirement):
+            name = _package_name_from_requirement(requirement)
+            return _patches.get(name, {{}})
 """
             + (install_deps_macro if not bzlmod else "")
         ).format(
             all_requirements=all_requirements,
             all_whl_requirements=all_whl_requirements,
             annotations=json.dumps(annotations),
+            patches=json.dumps(patches),
             args=dict(sorted(whl_library_args.items())),
             data_label=bazel.DATA_LABEL,
             dist_info_label=bazel.DIST_INFO_LABEL,
@@ -210,6 +222,11 @@ def generate_parsed_requirements_contents(
 
 def coerce_to_bool(option):
     return str(option).lower() == "true"
+
+
+def patches_map_from_str_path(path: str) -> Dict[str, Any]:
+    with Path(path).open() as f:
+        return json.load(f)
 
 
 def main(output: TextIO) -> None:
@@ -259,6 +276,11 @@ If set, it will take precedence over python_interpreter.",
         "--annotations",
         type=annotation.annotations_map_from_str_path,
         help="A json encoded file containing annotations for rendered packages.",
+    )
+    parser.add_argument(
+        "--patches",
+        type=patches_map_from_str_path,
+        help="A json encoded file containing package patch arguments.",
     )
     parser.add_argument(
         "--bzlmod",
@@ -312,6 +334,7 @@ If set, it will take precedence over python_interpreter.",
             repo_prefix=args.repo_prefix,
             whl_library_args=whl_library_args,
             annotations=annotated_requirements,
+            patches=args.patches,
             bzlmod=args.bzlmod,
         )
     )

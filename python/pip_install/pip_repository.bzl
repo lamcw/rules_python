@@ -1,5 +1,6 @@
 ""
 
+load("@bazel_tools//tools/build_defs/repo:utils.bzl", "patch")
 load("//python:repositories.bzl", "is_standalone_interpreter")
 load("//python/pip_install:repositories.bzl", "all_requirements")
 load("//python/pip_install:requirements_parser.bzl", parse_requirements = "parse")
@@ -299,6 +300,10 @@ def _pip_repository_impl(rctx):
     annotations_file = rctx.path("annotations.json")
     rctx.file(annotations_file, json.encode_indent(annotations, indent = " " * 4))
 
+    patches = {package: json.decode(data) for package, data in rctx.attr.patches.items()}
+    patches_file = rctx.path("patches.json")
+    rctx.file(patches_file, json.encode_indent(patches, indent = " " * 4))
+
     requirements_txt = locked_requirements_label(rctx, rctx.attr)
     args = [
         python_interpreter,
@@ -315,6 +320,8 @@ def _pip_repository_impl(rctx):
         str(rctx.attr.timeout),
         "--annotations",
         annotations_file,
+        "--patches",
+        patches_file,
         "--bzlmod",
         str(rctx.attr.bzlmod).lower(),
     ]
@@ -447,6 +454,9 @@ pip_repository_attrs = {
 we do not create the install_deps() macro.
 """,
     ),
+    "patches": attr.string_dict(
+        doc = "Optional patches to apply to packages.",
+    ),
     "requirements_darwin": attr.label(
         allow_single_file = True,
         doc = "Override the requirements_lock attribute when the host platform is Mac OS",
@@ -549,6 +559,7 @@ def _whl_library_impl(rctx):
     if result.return_code:
         fail("whl_library %s failed: %s (%s)" % (rctx.attr.name, result.stdout, result.stderr))
 
+    patch(rctx)
     return
 
 whl_library_attrs = {
@@ -566,6 +577,22 @@ whl_library_attrs = {
     "requirement": attr.string(
         mandatory = True,
         doc = "Python requirement string describing the package to make available",
+    ),
+    "patches": attr.label_list(
+        doc = "A list of patches to apply to the extracted wheel",
+    ),
+    "patch_tool": attr.string(
+        default = "",
+        doc = """The patch tool used to apply `patches`. If this is specified, Bazel will
+        use the specifed patch tool instead of the Bazel-native patch implementation.""",
+    ),
+    "patch_args": attr.string_list(
+        default = ["-p0"],
+        doc = "Arguments passed to the patch tool when applying patches.",
+    ),
+    "patch_cmds": attr.string_list(
+        default = [],
+        doc = "Commands to run in the repository after patches are applied.",
     ),
 }
 
@@ -612,4 +639,29 @@ def package_annotation(
         data = data,
         data_exclude_glob = data_exclude_glob,
         srcs_exclude_glob = srcs_exclude_glob,
+    ))
+
+def package_patches(
+    patches = [],
+    patch_tool = "",
+    patch_args = ["-p0"],
+    patch_cmds = []
+):
+    """Patch extracted content from package generated from a `pip_repository` rule.
+
+    Args:
+        patches (list, optional): A list of labels to use as patches to the generated whl_repository.
+        patch_tools (str, optional): The patch tool used to apply `patches`. If this is specified,
+            Bazel will use the specifed patch tool instead of the Bazel-native patch implementation.
+        patch_args (list, optional): Arguments passed to the patch tool when applying patches.
+        patch_cmds (list, optional): Commands to run in the repository after patches are applied.
+
+    Returns:
+        str: A json encoded string of the provided patch arguments.
+    """
+    return json.encode(struct(
+        patches = patches,
+        patch_tool = patch_tool,
+        patch_args = patch_args,
+        patch_cmds = patch_cmds,
     ))

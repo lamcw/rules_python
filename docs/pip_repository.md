@@ -8,7 +8,7 @@
 
 <pre>
 pip_repository(<a href="#pip_repository-name">name</a>, <a href="#pip_repository-annotations">annotations</a>, <a href="#pip_repository-bzlmod">bzlmod</a>, <a href="#pip_repository-download_only">download_only</a>, <a href="#pip_repository-enable_implicit_namespace_pkgs">enable_implicit_namespace_pkgs</a>,
-               <a href="#pip_repository-environment">environment</a>, <a href="#pip_repository-extra_pip_args">extra_pip_args</a>, <a href="#pip_repository-isolated">isolated</a>, <a href="#pip_repository-pip_data_exclude">pip_data_exclude</a>, <a href="#pip_repository-python_interpreter">python_interpreter</a>,
+               <a href="#pip_repository-environment">environment</a>, <a href="#pip_repository-extra_pip_args">extra_pip_args</a>, <a href="#pip_repository-isolated">isolated</a>, <a href="#pip_repository-patches">patches</a>, <a href="#pip_repository-pip_data_exclude">pip_data_exclude</a>, <a href="#pip_repository-python_interpreter">python_interpreter</a>,
                <a href="#pip_repository-python_interpreter_target">python_interpreter_target</a>, <a href="#pip_repository-quiet">quiet</a>, <a href="#pip_repository-repo_mapping">repo_mapping</a>, <a href="#pip_repository-repo_prefix">repo_prefix</a>, <a href="#pip_repository-requirements_darwin">requirements_darwin</a>,
                <a href="#pip_repository-requirements_linux">requirements_linux</a>, <a href="#pip_repository-requirements_lock">requirements_lock</a>, <a href="#pip_repository-requirements_windows">requirements_windows</a>, <a href="#pip_repository-timeout">timeout</a>)
 </pre>
@@ -66,6 +66,7 @@ py_binary(
 | <a id="pip_repository-environment"></a>environment |  Environment variables to set in the pip subprocess. Can be used to set common variables such as <code>http_proxy</code>, <code>https_proxy</code> and <code>no_proxy</code> Note that pip is run with "--isolated" on the CLI so PIP_&lt;VAR&gt;_&lt;NAME&gt; style env vars are ignored, but env vars that control requests and urllib3 can be passed.   | <a href="https://bazel.build/rules/lib/dict">Dictionary: String -> String</a> | optional | <code>{}</code> |
 | <a id="pip_repository-extra_pip_args"></a>extra_pip_args |  Extra arguments to pass on to pip. Must not contain spaces.   | List of strings | optional | <code>[]</code> |
 | <a id="pip_repository-isolated"></a>isolated |  Whether or not to pass the [--isolated](https://pip.pypa.io/en/stable/cli/pip/#cmdoption-isolated) flag to the underlying pip command. Alternatively, the <code>RULES_PYTHON_PIP_ISOLATED</code> enviornment varaible can be used to control this flag.   | Boolean | optional | <code>True</code> |
+| <a id="pip_repository-patches"></a>patches |  Optional patches to apply to packages.   | <a href="https://bazel.build/rules/lib/dict">Dictionary: String -> String</a> | optional | <code>{}</code> |
 | <a id="pip_repository-pip_data_exclude"></a>pip_data_exclude |  Additional data exclusion parameters to add to the pip packages BUILD file.   | List of strings | optional | <code>[]</code> |
 | <a id="pip_repository-python_interpreter"></a>python_interpreter |  The python interpreter to use. This can either be an absolute path or the name of a binary found on the host's <code>PATH</code> environment variable. If no value is set <code>python3</code> is defaulted for Unix systems and <code>python.exe</code> for Windows.   | String | optional | <code>""</code> |
 | <a id="pip_repository-python_interpreter_target"></a>python_interpreter_target |  If you are using a custom python interpreter built by another repository rule, use this attribute to specify its BUILD target. This allows pip_repository to invoke pip using the same interpreter as your toolchain. If set, takes precedence over python_interpreter.   | <a href="https://bazel.build/concepts/labels">Label</a> | optional | <code>None</code> |
@@ -85,8 +86,9 @@ py_binary(
 
 <pre>
 whl_library(<a href="#whl_library-name">name</a>, <a href="#whl_library-annotation">annotation</a>, <a href="#whl_library-download_only">download_only</a>, <a href="#whl_library-enable_implicit_namespace_pkgs">enable_implicit_namespace_pkgs</a>, <a href="#whl_library-environment">environment</a>,
-            <a href="#whl_library-extra_pip_args">extra_pip_args</a>, <a href="#whl_library-isolated">isolated</a>, <a href="#whl_library-pip_data_exclude">pip_data_exclude</a>, <a href="#whl_library-python_interpreter">python_interpreter</a>, <a href="#whl_library-python_interpreter_target">python_interpreter_target</a>,
-            <a href="#whl_library-quiet">quiet</a>, <a href="#whl_library-repo">repo</a>, <a href="#whl_library-repo_mapping">repo_mapping</a>, <a href="#whl_library-repo_prefix">repo_prefix</a>, <a href="#whl_library-requirement">requirement</a>, <a href="#whl_library-timeout">timeout</a>)
+            <a href="#whl_library-extra_pip_args">extra_pip_args</a>, <a href="#whl_library-isolated">isolated</a>, <a href="#whl_library-patch_args">patch_args</a>, <a href="#whl_library-patch_cmds">patch_cmds</a>, <a href="#whl_library-patch_tool">patch_tool</a>, <a href="#whl_library-patches">patches</a>, <a href="#whl_library-pip_data_exclude">pip_data_exclude</a>,
+            <a href="#whl_library-python_interpreter">python_interpreter</a>, <a href="#whl_library-python_interpreter_target">python_interpreter_target</a>, <a href="#whl_library-quiet">quiet</a>, <a href="#whl_library-repo">repo</a>, <a href="#whl_library-repo_mapping">repo_mapping</a>, <a href="#whl_library-repo_prefix">repo_prefix</a>,
+            <a href="#whl_library-requirement">requirement</a>, <a href="#whl_library-timeout">timeout</a>)
 </pre>
 
 
@@ -105,6 +107,10 @@ Instantiated from pip_repository and inherits config options from there.
 | <a id="whl_library-environment"></a>environment |  Environment variables to set in the pip subprocess. Can be used to set common variables such as <code>http_proxy</code>, <code>https_proxy</code> and <code>no_proxy</code> Note that pip is run with "--isolated" on the CLI so PIP_&lt;VAR&gt;_&lt;NAME&gt; style env vars are ignored, but env vars that control requests and urllib3 can be passed.   | <a href="https://bazel.build/rules/lib/dict">Dictionary: String -> String</a> | optional | <code>{}</code> |
 | <a id="whl_library-extra_pip_args"></a>extra_pip_args |  Extra arguments to pass on to pip. Must not contain spaces.   | List of strings | optional | <code>[]</code> |
 | <a id="whl_library-isolated"></a>isolated |  Whether or not to pass the [--isolated](https://pip.pypa.io/en/stable/cli/pip/#cmdoption-isolated) flag to the underlying pip command. Alternatively, the <code>RULES_PYTHON_PIP_ISOLATED</code> enviornment varaible can be used to control this flag.   | Boolean | optional | <code>True</code> |
+| <a id="whl_library-patch_args"></a>patch_args |  Arguments passed to the patch tool when applying patches.   | List of strings | optional | <code>["-p0"]</code> |
+| <a id="whl_library-patch_cmds"></a>patch_cmds |  Commands to run in the repository after patches are applied.   | List of strings | optional | <code>[]</code> |
+| <a id="whl_library-patch_tool"></a>patch_tool |  The patch tool used to apply <code>patches</code>. If this is specified, Bazel will         use the specifed patch tool instead of the Bazel-native patch implementation.   | String | optional | <code>""</code> |
+| <a id="whl_library-patches"></a>patches |  A list of patches to apply to the extracted wheel   | <a href="https://bazel.build/concepts/labels">List of labels</a> | optional | <code>[]</code> |
 | <a id="whl_library-pip_data_exclude"></a>pip_data_exclude |  Additional data exclusion parameters to add to the pip packages BUILD file.   | List of strings | optional | <code>[]</code> |
 | <a id="whl_library-python_interpreter"></a>python_interpreter |  The python interpreter to use. This can either be an absolute path or the name of a binary found on the host's <code>PATH</code> environment variable. If no value is set <code>python3</code> is defaulted for Unix systems and <code>python.exe</code> for Windows.   | String | optional | <code>""</code> |
 | <a id="whl_library-python_interpreter_target"></a>python_interpreter_target |  If you are using a custom python interpreter built by another repository rule, use this attribute to specify its BUILD target. This allows pip_repository to invoke pip using the same interpreter as your toolchain. If set, takes precedence over python_interpreter.   | <a href="https://bazel.build/concepts/labels">Label</a> | optional | <code>None</code> |
@@ -168,6 +174,31 @@ Annotations to apply to the BUILD file content from package generated from a `pi
 **RETURNS**
 
 str: A json encoded string of the provided content.
+
+
+<a id="package_patches"></a>
+
+## package_patches
+
+<pre>
+package_patches(<a href="#package_patches-patches">patches</a>, <a href="#package_patches-patch_tool">patch_tool</a>, <a href="#package_patches-patch_args">patch_args</a>, <a href="#package_patches-patch_cmds">patch_cmds</a>)
+</pre>
+
+Patch extracted content from package generated from a `pip_repository` rule.
+
+**PARAMETERS**
+
+
+| Name  | Description | Default Value |
+| :------------- | :------------- | :------------- |
+| <a id="package_patches-patches"></a>patches |  A list of labels to use as patches to the generated whl_repository.   |  <code>[]</code> |
+| <a id="package_patches-patch_tool"></a>patch_tool |  <p align="center"> - </p>   |  <code>""</code> |
+| <a id="package_patches-patch_args"></a>patch_args |  Arguments passed to the patch tool when applying patches.   |  <code>["-p0"]</code> |
+| <a id="package_patches-patch_cmds"></a>patch_cmds |  Commands to run in the repository after patches are applied.   |  <code>[]</code> |
+
+**RETURNS**
+
+str: A json encoded string of the provided patch arguments.
 
 
 <a id="use_isolated"></a>

@@ -128,6 +128,31 @@ Annotations to apply to the BUILD file content from package generated from a `pi
 str: A json encoded string of the provided content.
 
 
+<a id="package_patches"></a>
+
+## package_patches
+
+<pre>
+package_patches(<a href="#package_patches-patches">patches</a>, <a href="#package_patches-patch_tool">patch_tool</a>, <a href="#package_patches-patch_args">patch_args</a>, <a href="#package_patches-patch_cmds">patch_cmds</a>)
+</pre>
+
+Patch extracted content from package generated from a `pip_repository` rule.
+
+**PARAMETERS**
+
+
+| Name  | Description | Default Value |
+| :------------- | :------------- | :------------- |
+| <a id="package_patches-patches"></a>patches |  A list of labels to use as patches to the generated whl_repository.   |  <code>[]</code> |
+| <a id="package_patches-patch_tool"></a>patch_tool |  <p align="center"> - </p>   |  <code>""</code> |
+| <a id="package_patches-patch_args"></a>patch_args |  Arguments passed to the patch tool when applying patches.   |  <code>["-p0"]</code> |
+| <a id="package_patches-patch_cmds"></a>patch_cmds |  Commands to run in the repository after patches are applied.   |  <code>[]</code> |
+
+**RETURNS**
+
+str: A json encoded string of the provided patch arguments.
+
+
 <a id="pip_install"></a>
 
 ## pip_install
