@@ -584,6 +584,7 @@ def package_annotation(
         additive_build_content = None,
         copy_files = {},
         copy_executables = {},
+        deps = [],
         data = [],
         data_exclude_glob = [],
         srcs_exclude_glob = []):
@@ -597,6 +598,7 @@ def package_annotation(
         copy_executables (dict, optional): A mapping of `src` and `out` files for
             [@bazel_skylib//rules:copy_file.bzl][cf]. Targets generated here will also be flagged as
             executable.
+        deps (list, optional): A list of labels to add as `deps` dependencies to the generated `py_library` target.
         data (list, optional): A list of labels to add as `data` dependencies to the generated `py_library` target.
         data_exclude_glob (list, optional): A list of exclude glob patterns to add as `data` to the generated
             `py_library` target.
@@ -609,6 +611,7 @@ def package_annotation(
         additive_build_content = additive_build_content,
         copy_files = copy_files,
         copy_executables = copy_executables,
+        deps = deps,
         data = data,
         data_exclude_glob = data_exclude_glob,
         srcs_exclude_glob = srcs_exclude_glob,

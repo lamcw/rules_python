@@ -16,6 +16,7 @@ class Annotation(OrderedDict):
             "additive_build_content",
             "copy_executables",
             "copy_files",
+            "deps",
             "data",
             "data_exclude_glob",
             "srcs_exclude_glob",
@@ -48,6 +49,10 @@ class Annotation(OrderedDict):
     @property
     def copy_files(self) -> Dict[str, str]:
         return self["copy_files"]
+
+    @property
+    def deps(self) -> List[str]:
+        return self["deps"]
 
     @property
     def data(self) -> List[str]:

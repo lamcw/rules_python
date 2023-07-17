@@ -327,6 +327,9 @@ def _extract_wheel(
     sanitised_dependencies = [
         bazel.sanitised_repo_library_label(d, repo_prefix=repo_prefix) for d in whl_deps
     ]
+    if annotation:
+        sanitised_dependencies.extend(["\"{}\"".format(d) for d in annotation.deps])
+
     sanitised_wheel_file_dependencies = [
         bazel.sanitised_repo_file_label(d, repo_prefix=repo_prefix) for d in whl_deps
     ]
